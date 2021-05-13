@@ -4,6 +4,8 @@ import { FoodLabel } from "../Menu/FoodGrid";
 import { pizzaRed } from "../Styles/colors";
 import { Title } from "../Styles/title";
 import { formatPrice } from "../Data/FoodData";
+import { QuantityInput } from "../FoodDialog/QuantityInput";
+import { useQuantity } from "../Hooks/useQuantity";
 
 const Dialog = styled.div`
   width: 500px;
@@ -21,6 +23,7 @@ const Dialog = styled.div`
 export const DialogContent = styled.div`
   overflow: auto;
   min-height: 100px;
+  padding: 0px 40px;
 `;
 
 export const DialogFooter = styled.div`
@@ -64,15 +67,19 @@ const DialogBannerName = styled(FoodLabel)`
   font-size: 30px;
   padding: 5px 40px;
 `;
+export function getPrice(order) {
+  return order.quantity * order.price;
+}
 
-export function FoodDialog({ openFood, setOpenFood, setOrders, orders }) {
+function FoodDialogContainer({ openFood, setOpenFood, setOrders, orders }) {
+  const quantity = useQuantity(openFood && openFood.quantity);
   function close() {
     setOpenFood();
   }
-  if (!openFood) return null;
 
   const order = {
     ...openFood,
+    quantity: quantity.value,
   };
 
   function addToOrder() {
@@ -87,14 +94,21 @@ export function FoodDialog({ openFood, setOpenFood, setOrders, orders }) {
         <DialogBanner img={openFood.img}>
           <DialogBannerName>{openFood.name}</DialogBannerName>
         </DialogBanner>
-        <DialogContent></DialogContent>
+        <DialogContent>
+          <QuantityInput quantity={quantity} />
+        </DialogContent>
 
         <DialogFooter>
           <ConfirmButton onClick={addToOrder}>
-            Add to order: {formatPrice(openFood.price)}
+            Add to order: {formatPrice(getPrice(order))}
           </ConfirmButton>
         </DialogFooter>
       </Dialog>
     </>
   ) : null;
+}
+
+export function FoodDialog(props) {
+  if (!props.openFood) return null;
+  return <FoodDialogContainer {...props} />;
 }
